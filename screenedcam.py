@@ -3,7 +3,6 @@ import pyvirtualcam
 import numpy as np
 import keyboard
 
-# Threshold for detecting motion
 threshold = 15
 
 def toggle_toggle():
@@ -42,7 +41,6 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
     print(f'Virtual camera created: {cam.device}')
 
-    # Previous frame for computing frame difference
     prev_frame = None
 
     while True:
@@ -54,7 +52,7 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Compute frame difference
+     
         if prev_frame is not None:
             diff = cv2.absdiff(frame_rgb, prev_frame)
             gray = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)
@@ -62,13 +60,11 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
         else:
             motion_mask = np.zeros((height, width), dtype=np.uint8)
 
-        # Update previous frame
         prev_frame = frame_rgb
 
-        # Display motion mask
         cv2.imshow("Motion mask", motion_mask)
 
-        # Apply motion mask to original frame
+     
         frame_rgb = cv2.bitwise_and(frame_rgb, frame_rgb, mask=motion_mask)
 
         key = cv2.waitKey(1)
