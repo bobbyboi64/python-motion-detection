@@ -4,7 +4,7 @@ import numpy as np
 import keyboard
 
 # Threshold for detecting motion
-threshold = 30
+threshold = 15
 
 def toggle_toggle():
     global toggle
