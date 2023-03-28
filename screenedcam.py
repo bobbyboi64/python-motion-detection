@@ -3,7 +3,14 @@ import pyvirtualcam
 import numpy as np
 import keyboard
 
+# Threshold for detecting motion
 threshold = 15
+
+# Minimum size of the object to be tracked
+min_contour_area = 500
+
+# Color of the bounding box
+box_color = (0, 255, 0)
 
 def toggle_toggle():
     global toggle
@@ -42,6 +49,7 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
     print(f'Virtual camera created: {cam.device}')
 
     prev_frame = None
+    bbox = None
 
     while True:
 
@@ -52,7 +60,7 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-     
+        # Compute motion mask
         if prev_frame is not None:
             diff = cv2.absdiff(frame_rgb, prev_frame)
             gray = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)
@@ -60,14 +68,34 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
         else:
             motion_mask = np.zeros((height, width), dtype=np.uint8)
 
+        # Update previous frame
         prev_frame = frame_rgb
 
-        cv2.imshow("Motion mask", motion_mask)
-
-     
+        # Apply motion mask to original frame
         frame_rgb = cv2.bitwise_and(frame_rgb, frame_rgb, mask=motion_mask)
 
-        key = cv2.waitKey(1)
+        # Find contours of moving objects
+        contours, hierarchy = cv2.findContours(motion_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Filter contours based on area
+        valid_contours = []
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > min_contour_area:
+                valid_contours.append(contour)
+
+        # Update bounding box if a single object is detected
+        if len(valid_contours) == 1:
+            x, y, w, h = cv2.boundingRect(valid_contours[0])
+            bbox = (x, y, x+w, y+h)
+        else:
+            bbox = None
+
+        # Draw bounding box
+        if bbox is not None:
+            cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), box_color, thickness=2)
+
+        # Send frame to virtual camera
         if toggle:
             cam.send(framenew)
         else:
