@@ -39,10 +39,8 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
     print(f'Virtual camera created: {cam.device}')
 
-    # Default threshold value
     threshold = 15
 
-    # Create trackbars for adjusting parameters
     def on_threshold_change(val):
         global threshold
         threshold = val
@@ -64,7 +62,6 @@ with pyvirtualcam.Camera(width=width, height=height, fps=30) as cam:
             diff = cv2.absdiff(frame_rgb, prev_frame)
             gray = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)
 
-            # Use the threshold value from the trackbar
             motion_mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)[1]
         else:
             motion_mask = np.zeros((height, width), dtype=np.uint8)
